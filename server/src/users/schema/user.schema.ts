@@ -12,12 +12,14 @@ export class User {
 
   @Prop()
   friends: Friend[];
+
+  _id: string;
 }
 
 @Schema()
 export class Friend {
   @Prop()
-  username: string;
+  id: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
