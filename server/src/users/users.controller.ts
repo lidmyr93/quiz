@@ -7,26 +7,29 @@ import {
   Delete,
   Param,
   HttpStatus,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
-import { UserDto } from './dto/user.dto';
+import { UserDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
+@UsePipes(new ValidationPipe({ transform: true, forbidUnknownValues: true }))
 export class UsersController {
   constructor(private service: UsersService) {}
 
   @Get('/all')
-  async getAll() {
+  async getAll(): Promise<UserDto[]> {
     return this.service.getUsers();
   }
 
   @Get(':id')
-  async get(@Param() params): Promise<UserDto> {
-    return this.service.getUser(params.id);
+  async get(@Param('id') id: string): Promise<UserDto> {
+    return this.service.getUser(id);
   }
 
   @Post()
-  async create(@Body() user: UserDto): Promise<any> {
+  async create(@Body() user: CreateUserDto): Promise<UserDto> {
     const createdUser = await this.service.createUser(user);
     return createdUser;
   }
@@ -34,9 +37,8 @@ export class UsersController {
   @Put()
   async update(
     @Param('id') id: string,
-    @Body() user: UserDto,
+    @Body() user: UpdateUserDto,
   ): Promise<UserDto | HttpStatus> {
-    if (!user) return HttpStatus.BAD_REQUEST;
     try {
       const updatedUser = await this.service.updateUser(id, user);
 

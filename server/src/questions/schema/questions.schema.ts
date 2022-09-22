@@ -10,7 +10,7 @@ export class Question {
   question: string;
 
   @Prop()
-  category: string;
+  category: number;
 
   @Prop()
   answers: Answers[];
