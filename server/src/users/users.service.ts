@@ -1,34 +1,50 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { UserDto } from './dto/user.dto';
+import { UserDocument, User } from './schema/user.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectModel('Users') private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async getUsers(): Promise<User[]> {
-    return await this.usersRepository.find();
+  async getUsers(): Promise<UserDto[]> {
+    const users = await this.userModel.find().exec();
+    return users.map(({ _id, username, email, friends }) => ({
+      id: _id,
+      username,
+      email,
+      friends,
+    }));
   }
 
-  async getUser(_id: string): Promise<User[]> {
-    return await this.usersRepository.find({
-      select: ['username', 'id'],
-      where: [{ id: _id }],
+  async getUser(id: string): Promise<UserDto> {
+    let user;
+    try {
+      user = await this.userModel.findById(id);
+    } catch (e) {
+      throw new NotFoundException('User not found');
+    }
+    const { _id, username, email, friends } = user;
+
+    return { id: _id, username, email, friends };
+  }
+
+  async createUser(user: UserDto) {
+    return await this.userModel.create(user);
+  }
+
+  async updateUser(id: string, user: UserDto) {
+    const updatedUser = await this.userModel.findOneAndUpdate({ id }, user, {
+      returnDocument: 'after',
     });
+    const { _id, username, email, friends } = updatedUser;
+    return { id: _id, username, email, friends };
   }
 
-  async createUser(user: User) {
-    return await this.usersRepository.save(user);
-  }
-
-  async updateUser(user: User) {
-    this.usersRepository.save(user);
-  }
-
-  async deleteUser(user: User) {
-    this.usersRepository.delete(user);
+  async deleteUser(id: string) {
+    return await this.userModel.findByIdAndDelete(id);
   }
 }

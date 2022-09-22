@@ -1,31 +1,29 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
 import { LoggerMiddleware } from './middleware/logger';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { QuestionsModule } from './questions/questions.module';
 import { UsersModule } from './users/users.module';
-import { join } from 'path';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: 'password',
-      database: 'test',
-
-      entities: [join(__dirname, '**', '*.entity.{ts,js}')],
-      synchronize: true,
-    }),
     UsersModule,
+    QuestionsModule,
+    MongooseModule.forRootAsync({
+      useFactory: () => ({
+        uri: process.env.MONGODB_CONNECTION,
+      }),
+    }),
+    ConfigModule.forRoot({ isGlobal: true }),
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes(AppController);
+    consumer.apply(LoggerMiddleware).forRoutes(QuestionsModule, UsersModule);
   }
 }
