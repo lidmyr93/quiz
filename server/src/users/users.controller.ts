@@ -8,8 +8,8 @@ import {
   Param,
   HttpStatus,
 } from '@nestjs/common';
+import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
-import { User } from './user.entity';
 
 @Controller('users')
 export class UsersController {
@@ -21,22 +21,24 @@ export class UsersController {
   }
 
   @Get(':id')
-  async get(@Param() params) {
-    console.log('params', params.id);
+  async get(@Param() params): Promise<UserDto> {
     return this.service.getUser(params.id);
   }
 
   @Post()
-  async create(@Body() user: User) {
+  async create(@Body() user: UserDto): Promise<any> {
     const createdUser = await this.service.createUser(user);
     return createdUser;
   }
 
   @Put()
-  async update(@Body() user: User) {
+  async update(
+    @Param('id') id: string,
+    @Body() user: UserDto,
+  ): Promise<UserDto | HttpStatus> {
     if (!user) return HttpStatus.BAD_REQUEST;
     try {
-      const updatedUser = await this.service.updateUser(user);
+      const updatedUser = await this.service.updateUser(id, user);
 
       return updatedUser;
     } catch (e) {
@@ -45,9 +47,9 @@ export class UsersController {
   }
 
   @Delete(':id')
-  deleteUser(@Param() params) {
+  async deleteUser(@Param('id') id: string): Promise<HttpStatus.OK> {
     try {
-      this.service.deleteUser(params.id);
+      await this.service.deleteUser(id);
 
       return HttpStatus.OK;
     } catch (e) {
