@@ -1,19 +1,20 @@
 import { useState } from "react";
 import Input from "@/components/input/Input";
 import { useNavigate } from "react-router-dom";
-import { LoginLayout } from "./LoginPage.styled";
+import { RegisterLayout } from "./RegisterPage.styled";
 
-export default function LoginPage(): JSX.Element {
+export default function RegisterPage(): JSX.Element {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
 
   const navigate = useNavigate();
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    console.log({ username, password });
-    const resp = await fetch("http://localhost:3000/users/login", {
+    console.log({ username, password, email });
+    const resp = await fetch("http://localhost:3000/users", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, email }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -23,7 +24,7 @@ export default function LoginPage(): JSX.Element {
   };
 
   return (
-    <LoginLayout>
+    <RegisterLayout>
       <form onSubmit={handleSubmit}>
         <Input
           type="text"
@@ -43,9 +44,18 @@ export default function LoginPage(): JSX.Element {
           label="Password"
           value={password}
         />
-        <button type="submit">Login</button>
-        <button onClick={() => navigate("/register")}>register</button>
+        <Input
+          type="text"
+          name="email"
+          onChange={(e: React.FormEvent<HTMLInputElement>): void =>
+            setEmail(e.currentTarget.value)
+          }
+          label="Email"
+          value={email}
+        />
+        <button type="submit">register</button>
+        <button onClick={() => navigate("/")}>Already have an account?</button>
       </form>
-    </LoginLayout>
+    </RegisterLayout>
   );
 }
